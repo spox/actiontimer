@@ -7,3 +7,7 @@ be executed in an efficient manner. It makes
 use of a single thread to keep time on registered
 actions and uses an ActionPool to execute
 actions. Simple and effective.
+
+Note: Still testing after moving to its own lib.
+      Probably (most likely) still a few bugs that
+      I should have fixed in the next day or so
