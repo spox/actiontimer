@@ -1,0 +1,9 @@
+            == ActionTimer ==
+  ~ Simple timing for a complex world ~
+
+ActionTimer is a helper for timed events. It
+allows for single and recurring actions to
+be executed in an efficient manner. It makes
+use of a single thread to keep time on registered
+actions and uses an ActionPool to execute
+actions. Simple and effective.
