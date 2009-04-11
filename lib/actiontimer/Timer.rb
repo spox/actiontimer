@@ -41,9 +41,9 @@ module ActionTimer
         # actions:: Array of actions
         # Add multiple Actions to the timer at once
         def mass_add(actions)
-            raise Exceptions::InvalidType.new(Array, actions.class) unless actions.is_a?(Array)
+            raise InvalidType.new(Array, actions.class) unless actions.is_a?(Array)
             actions.each do |action|
-                raise Exceptions::InvalidType.new(ActionTimer::Action, action.class) unless action.is_a?(Action)
+                raise InvalidType.new(ActionTimer::Action, action.class) unless action.is_a?(Action)
             end
             @add_lock.synchronize{ @new_actions = @new_actions + actions }
             wakeup
@@ -52,14 +52,14 @@ module ActionTimer
         # action:: Action to remove from timer
         # Remove given action from timer
         def remove(action)
-            raise Exceptions::InvalidType.new(ActionTimer::Action, action.class) unless action.is_a?(Action)
+            raise InvalidType.new(ActionTimer::Action, action.class) unless action.is_a?(Action)
             @actions.delete(action)
             wakeup
         end
         
         # Start the timer
         def start
-            raise Exceptions::AlreadyRunning.new unless @timer_thread.nil?
+            raise AlreadyRunning.new unless @timer_thread.nil?
             @timer_thread = Thread.new do
                 begin
                     until @stop_timer do
