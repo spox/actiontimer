@@ -8,6 +8,41 @@ use of a single thread to keep time on registered
 actions and uses an ActionPool to execute
 actions. Simple and effective.
 
-Note: Still testing after moving to its own lib.
-      Probably (most likely) still a few bugs that
-      I should have fixed in the next day or so
+install (easy):
+
+gem install ActionTimer
+
+install (less easy):
+
+git clone http://github.com/spox/actiontimer.git
+cd actiontimer
+gem build actiontimer.gemspec
+gem install ActionTimer-x.x.x.gem
+
+Simple example of using the timer:
+
+require 'actiontimer'
+
+timer = ActionTimer::Timer.new
+
+timer.add(10){puts "#{Time.now}: This is timed every 10 seconds"}
+timer.add(15){puts "#{Time.now}: This is timed every 15 seconds"}
+loop do
+    puts "#{Time.now}: Main loop that sleeps for 5 seconds"
+    sleep(5)
+end
+
+Output:
+
+2009-04-13 17:41:39 -0700: Main loop that sleeps for 5 seconds
+2009-04-13 17:41:44 -0700: Main loop that sleeps for 5 seconds
+2009-04-13 17:41:49 -0700: This is timed every 10 seconds
+2009-04-13 17:41:49 -0700: Main loop that sleeps for 5 seconds
+2009-04-13 17:41:54 -0700: This is timed every 15 seconds
+2009-04-13 17:41:54 -0700: Main loop that sleeps for 5 seconds
+2009-04-13 17:41:59 -0700: This is timed every 10 seconds
+2009-04-13 17:41:59 -0700: Main loop that sleeps for 5 seconds
+2009-04-13 17:42:04 -0700: Main loop that sleeps for 5 seconds
+2009-04-13 17:42:09 -0700: This is timed every 10 seconds
+2009-04-13 17:42:09 -0700: This is timed every 15 seconds
+2009-04-13 17:42:09 -0700: Main loop that sleeps for 5 seconds
