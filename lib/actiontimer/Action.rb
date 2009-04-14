@@ -13,7 +13,6 @@ module ActionTimer
             @block = block
             @data = data
             @once = once
-            @due = false
             @timer = timer
             @completed = false
             @wait_remaining = @period
@@ -59,6 +58,11 @@ module ActionTimer
         def schedule
             @wait_remaining = @period
             return self
+        end
+
+        # Is action due for execution
+        def due?
+            @wait_remaining <= 0
         end
         
         # Run the action

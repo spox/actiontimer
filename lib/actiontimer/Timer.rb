@@ -12,15 +12,15 @@ module ActionTimer
             @stop_timer = false
             @add_lock = Mutex.new
             @awake_lock = Mutex.new
-            @new_actions = Queue.new
-            @pool = pool.nil? ? ActionPool.new : pool
+            @pool = pool.nil? ? ActionPool::Pool.new : pool
             @logger = LogHelper.new(logger)
+            start
         end
         
         # Forcibly wakes the timer early
         def wakeup
             return unless @awake_lock.try_lock
-            @timer_thread.wakeup
+            @timer_thread.wakeup if @timer_thread.status == 'sleep'
             @awake_lock.unlock
         end
         
@@ -65,7 +65,7 @@ module ActionTimer
                     until @stop_timer do
                         to_sleep = get_min_sleep
                         if((to_sleep.nil? || to_sleep > 0) && @new_actions.empty?)
-                            @awake_lock.unlock
+                            @awake_lock.unlock if @awake_lock.locked?
                             actual_sleep = to_sleep.nil? ? sleep : sleep(to_sleep)
                             @awake_lock.lock
                         else
