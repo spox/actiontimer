@@ -5,16 +5,24 @@ module ActionTimer
     class Timer
         # pool:: ActionPool for processing actions
         # Creates a new timer
-        def initialize(pool=nil, logger=nil)
+        # Argument hash: {:pool, :logger, :auto_start}
+        def initialize(args={}, extra=nil)
+            auto_start = true
+            if(args.is_a?(Hash))
+                @pool = args[:pool] ? args[:pool] : ActionPool::Pool.new
+                @logger = LogHelper.new(args[:logger])
+                auto_start = args[:auto_start] if args[:auto_start]
+            else
+                @pool = args.is_a?(ActionPool::Pool) ? args : ActionPool::Pool.new
+                @logger = LogHelper.new(extra)
+            end
             @actions = []
             @new_actions = []
             @timer_thread = nil
             @stop_timer = false
             @add_lock = Mutex.new
             @awake_lock = Mutex.new
-            @pool = pool.nil? ? ActionPool::Pool.new : pool
-            @logger = LogHelper.new(logger)
-            start
+            start if auto_start
         end
         
         # Forcibly wakes the timer early
@@ -60,6 +68,7 @@ module ActionTimer
         # Start the timer
         def start
             raise AlreadyRunning.new unless @timer_thread.nil?
+            @stop_timer = false
             @timer_thread = Thread.new do
                 begin
                     until @stop_timer do
@@ -75,16 +84,33 @@ module ActionTimer
                         add_waiting_actions
                     end
                 rescue Object => boom
+                    @timer_thread = nil
+                    clean_actions
                     @logger.fatal("Timer encountered an unexpected error: #{boom}\n#{boom.backtrace.join("\n")}")
                 end
             end
         end
         
-        # Stop the timer
+        # Pause the timer in its current state.
+        def pause
+            @stop_timer = true
+            if(running?)
+                wakeup
+                @timer_thread.join
+            end
+            @timer_thread = nil
+        end
+
+        # Stop the timer. Unlike pause, this will completely
+        # stop the timer and remove all actions from the timer
         def stop
             @stop_timer = true
-            wakeup
-            @timer_thread.join
+            if(running?)
+                wakeup
+                clean_actions
+                @timer_thread.join
+            end
+            @timer_thread = nil
         end
         
         # owner:: owner actions to remove
@@ -98,6 +124,11 @@ module ActionTimer
                 @actions.each{|a| @actions.delete(a) if a.owner == owner}
             end
             wakeup
+        end
+        
+        # Is timer currently running?
+        def running?
+            return !@timer_thread.nil?
         end
         
         private
@@ -133,6 +164,11 @@ module ActionTimer
                     end
                 end
             end
+        end
+        
+        def clean_actions
+            @actions.clear
+            @new_actions.clear
         end
         
     end
