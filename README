@@ -8,9 +8,17 @@ use of a single thread to keep time on registered
 actions and uses an ActionPool to execute
 actions. Simple and effective.
 
+trac site:
+
+http://dev.modspox.com/trac/actiontimer
+
+RDocs:
+
+http://dev.modspox.com/~sine/ActionTimer
+
 install (easy):
 
-gem install ActionTimer
+gem install --include-dependencies ActionTimer
 
 install (less easy):
 
