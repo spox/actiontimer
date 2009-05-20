@@ -1,0 +1,5 @@
+0.0.2
+    - added new Timer::running? method
+    - added new Timer::pause method
+    - fixed single iteration action bug
+    - added unit tests for proper checks
