@@ -12,6 +12,6 @@ spec = Gem::Specification.new do |s|
     s.require_paths     = %w(lib)
     s.add_dependency 'ActionPool'
     s.required_ruby_version = '>= 1.8.6'
-    s.homepage          = %q(http://dev.modspox.com/trac/spockets)
+    s.homepage          = %q(http://dev.modspox.com/trac/ActionTimer)
     s.description       = []
 end
