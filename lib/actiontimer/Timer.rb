@@ -153,7 +153,7 @@ module ActionTimer
             @actions.each do |action|
                 action.tick(time_passed)
                 if(action.due?)
-                    remove(action) if action.is_complete?
+                    @actions.delete(action) if action.is_complete?
                     action = action.schedule
                     @pool.process do
                         begin
