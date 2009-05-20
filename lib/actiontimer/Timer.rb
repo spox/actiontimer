@@ -11,7 +11,7 @@ module ActionTimer
             if(args.is_a?(Hash))
                 @pool = args[:pool] ? args[:pool] : ActionPool::Pool.new
                 @logger = LogHelper.new(args[:logger])
-                auto_start = args[:auto_start] if args[:auto_start]
+                auto_start = args.has_key?(:auto_start) ? args[:auto_start] : true
             else
                 @pool = args.is_a?(ActionPool::Pool) ? args : ActionPool::Pool.new
                 @logger = LogHelper.new(extra)
@@ -27,6 +27,7 @@ module ActionTimer
         
         # Forcibly wakes the timer early
         def wakeup
+            raise NotRunning.new unless running?
             return unless @awake_lock.try_lock
             @timer_thread.wakeup if @timer_thread.status == 'sleep'
             @awake_lock.unlock
@@ -42,7 +43,7 @@ module ActionTimer
             action = Action.new(self, period, once, data, &func)
             action.owner = owner unless owner.nil?
             @add_lock.synchronize{ @new_actions << action }
-            wakeup
+            wakeup if running?
             return action
         end
         
@@ -54,7 +55,7 @@ module ActionTimer
                 raise InvalidType.new(ActionTimer::Action, action.class) unless action.is_a?(Action)
             end
             @add_lock.synchronize{ @new_actions = @new_actions + actions }
-            wakeup
+            wakeup if running?
         end
         
         # action:: Action to remove from timer
@@ -62,7 +63,7 @@ module ActionTimer
         def remove(action)
             raise InvalidType.new(ActionTimer::Action, action.class) unless action.is_a?(Action)
             @actions.delete(action)
-            wakeup
+            wakeup if running?
         end
         
         # Start the timer
