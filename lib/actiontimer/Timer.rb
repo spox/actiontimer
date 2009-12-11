@@ -1,5 +1,5 @@
 require 'actionpool'
-['Action', 'Exceptions', 'LogHelper'].each{|f| require "actiontimer/#{f}"}
+['Action', 'Exceptions'].each{|f| require "actiontimer/#{f}"}
 
 module ActionTimer
     class Timer
@@ -10,11 +10,11 @@ module ActionTimer
             auto_start = true
             if(args.is_a?(Hash))
                 @pool = args[:pool] ? args[:pool] : ActionPool::Pool.new
-                @logger = LogHelper.new(args[:logger])
+                @logger = args[:logger] && args[:logger].is_a?(Logger) ? args[:logger] : Logger.new(nil)
                 auto_start = args.has_key?(:auto_start) ? args[:auto_start] : true
             else
                 @pool = args.is_a?(ActionPool::Pool) ? args : ActionPool::Pool.new
-                @logger = LogHelper.new(extra)
+                @logger = extra && extra.is_a?(Logger) ? extra : Logger.new(nil)
             end
             @actions = []
             @new_actions = []
