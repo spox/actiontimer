@@ -2,20 +2,16 @@
 
 ActionTimer is a helper for timed events. It allows for single and recurring actions to be executed in an efficient manner. It makes use of a single thread to keep time on registered actions and uses an ActionPool to execute actions. Simple and effective.
 
-==== useful links
-* {trac site}[http://dev.modspox.com/trac/actiontimer]
-* {RDocs}[http://dev.modspox.com/~sine/ActionTimer]
-
 === install (easy):
 
-    gem install --include-dependencies ActionTimer
+    gem install ActionTimer
 
 === install (less easy):
 
     git clone http://github.com/spox/actiontimer.git
     cd actiontimer
     gem build actiontimer.gemspec
-    gem install ActionTimer-x.x.x.gem
+    gem install ./
 
 === Simple example of using the timer:
 
