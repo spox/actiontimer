@@ -1,9 +1,9 @@
 spec = Gem::Specification.new do |s|
     s.name              = 'ActionTimer'
-    s.author            = %q(spox)
-    s.email             = %q(spox@modspox.com)
-    s.version           = '0.0.2'
-    s.summary           = %q(Simple timer for a complex world)
+    s.author            = 'spox'
+    s.email             = 'spox@modspox.com'
+    s.version           = '0.1.0'
+    s.summary           = 'Simple timer for a complex world'
     s.platform          = Gem::Platform::RUBY
     s.has_rdoc          = true
     s.rdoc_options      = %w(--title ActionTimer --main README.rdoc --line-numbers --inline-source)
@@ -12,14 +12,6 @@ spec = Gem::Specification.new do |s|
     s.require_paths     = %w(lib)
     s.add_dependency 'ActionPool'
     s.required_ruby_version = '>= 1.8.6'
-    s.homepage          = %q(http://dev.modspox.com/trac/ActionTimer)
-    description         = []
-    File.open("README.rdoc") do |file|
-        file.each do |line|
-            line.chomp!
-            break if line.empty?
-            description << "#{line.gsub(/\[\d\]/, '')}"
-        end
-    end
-    s.description = description[1..-1].join(" ")
+    s.homepage          = 'http://github.com/spox/actiontimer'
+    s.description       = 'ActionTimer is a simple timer for recurring actions. It supports single and recurring actions with an easy to use API.'
 end
