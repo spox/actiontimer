@@ -55,6 +55,11 @@ class TimerTests < Test::Unit::TestCase
         @timer.add(1, true, 3){|a| result = a}
         sleep(2)
         assert_equal(3, result)
+        @timer.add(1, true, [3,4,['foobar']]){|a,b,c| result = [b,a,c]}
+        sleep(2)
+        assert_equal(4, result[0])
+        assert_equal(3, result[1])
+        assert(result[2].is_a?(Array))
     end
 
     # Check that the timer's auto starting mechanism
