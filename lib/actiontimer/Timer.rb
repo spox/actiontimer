@@ -50,9 +50,9 @@ module ActionTimer
         # actions:: Array of actions
         # Add multiple Actions to the timer at once
         def mass_add(actions)
-            raise InvalidType.new(Array, actions.class) unless actions.is_a?(Array)
+            raise ArgumentError.new('Expecting an array') unless actions.is_a?(Array)
             actions.each do |action|
-                raise InvalidType.new(ActionTimer::Action, action.class) unless action.is_a?(Action)
+                raise ArgumentError.new('Expecting an Action') unless action.is_a?(Action)
             end
             @add_lock.synchronize{ @new_actions = @new_actions + actions }
             wakeup if running?
@@ -61,7 +61,7 @@ module ActionTimer
         # action:: Action to remove from timer
         # Remove given action from timer
         def remove(action)
-            raise InvalidType.new(ActionTimer::Action, action.class) unless action.is_a?(Action)
+            raise ArgumentError.new('Expecting an action') unless action.is_a?(Action)
             @actions.delete(action)
             wakeup if running?
         end
@@ -159,7 +159,7 @@ module ActionTimer
                     @pool.process do
                         begin
                             action.run
-                        rescue Object => boom
+                        rescue StandardError => boom
                             @logger.error("Timer caught an error while running action: #{boom}\n#{boom.backtrace.join("\n")}")
                         end
                     end
