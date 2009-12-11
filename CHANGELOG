@@ -1,5 +1,10 @@
 = CHANGELOG
 
+== 0.1.0
+* remove excess exceptions
+* use logger directly
+* add a splat for data passage
+
 == 0.0.2
 * added new Timer::running? method
 * added new Timer::pause method
