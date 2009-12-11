@@ -67,7 +67,7 @@ module ActionTimer
         
         # Run the action
         def run
-            @data.nil? ? @block.call : @block.call(@data)
+            @data.nil? ? @block.call : @block.call(*@data)
         end
     end
 end
