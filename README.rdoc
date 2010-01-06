@@ -92,9 +92,9 @@ What if you want to add multiple actions at one time? We can do this:
     timer = ActionTimer::Timer.new
     result = 0
     actions = []
-    actions << ActionTimer::Action.new(@timer, 0.1){ result += 1}
-    actions << ActionTimer::Action.new(@timer, 0.2){ result += 1}
-    actions << ActionTimer::Action.new(@timer, 0.3){ result += 1}
+    actions << ActionTimer::Action.new(timer, 0.1){ result += 1}
+    actions << ActionTimer::Action.new(timer, 0.2){ result += 1}
+    actions << ActionTimer::Action.new(timer, 0.3){ result += 1}
     timer.mass_add(actions)
     sleep(0.41)
     p result
