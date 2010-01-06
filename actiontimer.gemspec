@@ -10,7 +10,7 @@ spec = Gem::Specification.new do |s|
     s.extra_rdoc_files  = %w(README.rdoc LICENSE CHANGELOG)
     s.files             = Dir['**/*']
     s.require_paths     = %w(lib)
-    s.add_dependency 'ActionPool'
+    s.add_dependency 'actionpool', '~> 0.2.2'
     s.required_ruby_version = '>= 1.8.6'
     s.homepage          = 'http://github.com/spox/actiontimer'
     s.description       = 'ActionTimer is a simple timer for recurring actions. It supports single and recurring actions with an easy to use API.'
