@@ -81,6 +81,7 @@ module ActionTimer
                         else
                             actual_sleep = 0
                         end
+                        actual_sleep = to_sleep if actual_sleep <= 0
                         tick(actual_sleep)
                         add_waiting_actions
                     end
