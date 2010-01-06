@@ -76,12 +76,13 @@ module ActionTimer
                         to_sleep = get_min_sleep
                         if((to_sleep.nil? || to_sleep > 0) && @new_actions.empty?)
                             @awake_lock.unlock if @awake_lock.locked?
-                            actual_sleep = to_sleep.nil? ? sleep : sleep(to_sleep)
+                            start = Time.now.to_f
+                            to_sleep.nil? ? sleep : sleep(to_sleep)
+                            actual_sleep = Time.now.to_f - start
                             @awake_lock.lock
                         else
                             actual_sleep = 0
                         end
-                        actual_sleep = to_sleep if actual_sleep <= 0
                         tick(actual_sleep)
                         add_waiting_actions
                     end
