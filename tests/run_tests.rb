@@ -1,3 +1,5 @@
+$LOAD_PATH.unshift(File.expand_path("#{__FILE__}/../../lib"))
+
 require 'test/unit'
 require 'actiontimer'
 
@@ -25,6 +27,15 @@ class TimerTests < Test::Unit::TestCase
         @timer.stop
         assert(!@timer.running?)
     end
+    
+    # Check that a value 0 < t < 1 works
+    # as expected
+    def test_float
+        result = 0
+        @timer.add(0.1){ result += 1 }
+        sleep(1.01)
+        assert_equal(10, result)
+    end
 
     # Check that a single iterative action is only
     # completed once
@@ -44,7 +55,7 @@ class TimerTests < Test::Unit::TestCase
         @timer.pause
         sleep(2)
         @timer.start
-        sleep(2.1)
+        sleep(2)
         assert_equal(5, result)
     end
 
