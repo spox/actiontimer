@@ -1,8 +1,8 @@
 spec = Gem::Specification.new do |s|
-    s.name              = 'ActionTimer'
+    s.name              = 'actiontimer'
     s.author            = 'spox'
     s.email             = 'spox@modspox.com'
-    s.version           = '0.1.0'
+    s.version           = '0.1.1'
     s.summary           = 'Simple timer for a complex world'
     s.platform          = Gem::Platform::RUBY
     s.has_rdoc          = true
