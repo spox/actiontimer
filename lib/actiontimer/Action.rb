@@ -8,17 +8,23 @@ module ActionTimer
         # once:: only run this action once
         # data:: data to pass to block
         # block:: block to be executed
-        def initialize(timer, period, once=false, data=nil, &block)
-            @period = period.to_f
+        def initialize(hash, &block)
+            raise ArgumentError.new('Timer must be supplied') if(!hash[:timer] || !hash[:timer].is_a?(Timer))
+            raise ArgumentError.new('Period must be supplied') unless hash[:period]
+            raise ArgumentError.new('Block must be provided') unless block_given?
+            raise ArgumentError.new('Block must accept data value') if hash[:data] && block.arity == 0
+            raise ArgumentError.new('Data must be supplied for block') if !hash[:data] && !(block.arity == 0)
+            args = {:once => false, :data => nil, :owner => nil}.merge(hash)
+            @period = args[:period].to_f
             @block = block
-            @data = data
-            @once = once
-            @timer = timer
+            @data = args[:data]
+            @once = args[:once]
+            @timer = args[:timer]
             @completed = false
             @wait_remaining = @period
-            @owner = nil
+            @owner = args[:owner]
         end
-        
+
         # o:: Object that added this action
         # Adds an owner for this action. Useful
         # for clearing all actions for a given
@@ -30,6 +36,8 @@ module ActionTimer
         # amount:: amount of time that has passed
         # Decrement remaining wait time by given amount
         def tick(amount)
+            amount = amount.to_f
+            amount = 0.0 if amount < 0.0
             @wait_remaining = @wait_remaining - amount if @wait_remaining > 0
             @wait_remaining = 0 if @wait_remaining < 0
             @completed = true if @once && @wait_remaining <= 0
@@ -45,6 +53,7 @@ module ActionTimer
         def reset_period(new_time)
             @period = new_time.to_f
             @wait_remaining = @period
+            @completed = false
             @timer.wakeup
         end
         
