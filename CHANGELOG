@@ -1,5 +1,12 @@
 = CHANGELOG
 
+== 0.2.0
+* hashed arguments for Timer#add and Action#new
+* Timer#mass_add replaced with Timer#register for single and arrays of Actions
+* Timer#registered? added to see if an Action is registered with the timer
+* Timer#actions to see Actions registered with the timer
+* Action#timer= to allow Actions to be moved
+
 == 0.1.1
 * fix for float calculations 
 * downcased gem name
