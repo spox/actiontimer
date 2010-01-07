@@ -39,23 +39,30 @@ module ActionTimer
         # owner:: owner of Action
         # func:: block to be executed
         # Add a new action to block
-        def add(period, once=false, data=nil, owner=nil, &func)
-            action = Action.new(self, period, once, data, &func)
-            action.owner = owner unless owner.nil?
+        def add(hash, &func)
+            raise ArgumentError.new('Expecting hash of arguments') unless hash.is_a?(Hash)
+            raise ArgumentError.new('A period must be provided for timed action') unless hash[:period]
+            raise ArgumentError.new('Block must be provided') unless block_given?
+            raise ArgumentError.new('Block must accept data value') if hash[:data] && func.arity == 0
+            args = {:once => false, :data => nil, :owner => nil}.merge(hash)
+            action = Action.new(args.merge(:timer => self) &func)
             @add_lock.synchronize{ @new_actions << action }
             wakeup if running?
             return action
         end
         
-        # actions:: Array of actions
-        # Add multiple Actions to the timer at once
-        def mass_add(actions)
-            raise ArgumentError.new('Expecting an array') unless actions.is_a?(Array)
-            actions.each do |action|
-                raise ArgumentError.new('Expecting an Action') unless action.is_a?(Action)
+        # actions:: Array of actions or single ActionTimer::Action
+        # Add single or multiple Actions to the timer at once
+        def register(action)
+            if(action.is_a?(Array))
+                unless(action.find{|x|x.is_a?(Action)}.nil?)
+                    raise ArgumentError.new('Array contains non ActionTimer::Timer objects')
+                end
+            else
+                raise ArgumentError.new('Expecting an ActionTimer::Action object') unless action.is_a?(Action)
+                action = [action]
             end
             @add_lock.synchronize{ @new_actions = @new_actions + actions }
-            wakeup if running?
         end
         
         # action:: Action to remove from timer
@@ -132,6 +139,17 @@ module ActionTimer
         # Is timer currently running?
         def running?
             return !@timer_thread.nil?
+        end
+
+        # action:: ActionTimer::Action
+        # Is action currently in timer
+        def registered?(action)
+            @actions.include?(action)
+        end
+
+        # Actions registered with the timer
+        def actions
+            @actions.dup
         end
         
         private
