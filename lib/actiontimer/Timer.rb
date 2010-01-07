@@ -45,7 +45,7 @@ module ActionTimer
             raise ArgumentError.new('Block must be provided') unless block_given?
             raise ArgumentError.new('Block must accept data value') if hash[:data] && func.arity == 0
             args = {:once => false, :data => nil, :owner => nil}.merge(hash)
-            action = Action.new(args.merge(:timer => self) &func)
+            action = Action.new(args.merge(:timer => self), &func)
             @add_lock.synchronize{ @new_actions << action }
             wakeup if running?
             return action
@@ -55,14 +55,15 @@ module ActionTimer
         # Add single or multiple Actions to the timer at once
         def register(action)
             if(action.is_a?(Array))
-                unless(action.find{|x|x.is_a?(Action)}.nil?)
-                    raise ArgumentError.new('Array contains non ActionTimer::Timer objects')
+                if(action.find{|x|x.is_a?(Action)}.nil?)
+                    raise ArgumentError.new('Array contains non ActionTimer::Action objects')
                 end
             else
                 raise ArgumentError.new('Expecting an ActionTimer::Action object') unless action.is_a?(Action)
                 action = [action]
             end
-            @add_lock.synchronize{ @new_actions = @new_actions + actions }
+            @add_lock.synchronize{ @new_actions = @new_actions + action }
+            wakeup if running?
         end
         
         # action:: Action to remove from timer
@@ -133,7 +134,7 @@ module ActionTimer
             else
                 @actions.each{|a| @actions.delete(a) if a.owner == owner}
             end
-            wakeup
+            wakeup if running?
         end
         
         # Is timer currently running?
