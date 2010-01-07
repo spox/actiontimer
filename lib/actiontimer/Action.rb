@@ -10,7 +10,6 @@ module ActionTimer
         # data:: data to pass to block
         # block:: block to be executed
         def initialize(hash, &block)
-            raise ArgumentError.new('Timer must be supplied') if(!hash[:timer] || !hash[:timer].is_a?(Timer))
             raise ArgumentError.new('Period must be supplied') unless hash[:period]
             raise ArgumentError.new('Block must be provided') unless block_given?
             raise ArgumentError.new('Block must accept data value') if hash[:data] && block.arity == 0
@@ -62,7 +61,7 @@ module ActionTimer
             @period = new_time.to_f
             @wait_remaining = @period
             @completed = false
-            @timer.wakeup
+            @timer.wakeup unless @timer.nil?
         end
         
         # Action is ready to be destroyed
