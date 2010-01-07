@@ -2,6 +2,7 @@ module ActionTimer
     class Action
     
         attr_accessor :owner
+        attr_accessor :timer
     
         # timer:: Timer this action resides within
         # period:: amount of time between runs
@@ -25,6 +26,13 @@ module ActionTimer
             @owner = args[:owner]
         end
 
+        # t:: ActionTimer::Timer
+        # Set timer for action to be associated with
+        def timer=(t)
+            raise ArgumentError.new('Expecting an ActionTimer::Timer') unless t.is_a?(ActionTimer::Timer)
+            @timer = t
+        end
+        
         # o:: Object that added this action
         # Adds an owner for this action. Useful
         # for clearing all actions for a given
