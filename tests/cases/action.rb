@@ -18,8 +18,10 @@ class ActionTests < Test::Unit::TestCase
         assert_raise(ArgumentError) do
             action = ActionTimer::Action.new(:timer => @timer, :period => 1, :data => 1)
         end
-        assert_raise(ArgumentError) do
-            action = ActionTimer::Action.new(:timer => @timer, :period => 1, :data => 1){true}
+        if(RUBY_VERSION > "1.9.0")
+            assert_raise(ArgumentError) do
+                action = ActionTimer::Action.new(:timer => @timer, :period => 1, :data => 1){true}
+            end
         end
         assert_kind_of(ActionTimer::Action, ActionTimer::Action.new(:timer => @timer, :period => 1){true})
         assert_kind_of(ActionTimer::Action, ActionTimer::Action.new(:timer => @timer, :period => 1, :once => true){true})

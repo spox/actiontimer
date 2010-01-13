@@ -19,8 +19,10 @@ class TimerTests < Test::Unit::TestCase
         assert_raise(ArgumentError) do
             @timer.add(:period => 1)
         end
-        assert_raise(ArgumentError) do
-            @timer.add(:period => 1, :data => 2){true}
+        if(RUBY_VERSION > "1.9.0")
+            assert_raise(ArgumentError) do
+                @timer.add(:period => 1, :data => 2){true}
+            end
         end
     end
 
@@ -31,10 +33,10 @@ class TimerTests < Test::Unit::TestCase
         sleep(0.01)
         assert_equal(1, @timer.actions.size)
         assert(@timer.registered?(action))
-        action = @timer.add(:period => 0.1, :once => true, :data => :foo){|x| output << x }
+        @timer.add(:period => 0.1, :once => true, :data => :foo){|x| output << x }
         sleep(0.01)
         assert_equal(2, @timer.actions.size)
-        sleep(0.1)
+        sleep(0.14)
         assert_equal(:foo, output.pop)
         assert_equal(1, @timer.actions.size)
     end
@@ -43,7 +45,7 @@ class TimerTests < Test::Unit::TestCase
         output = []
         action = ActionTimer::Action.new(:period => 0.01){output << :action}
         @timer.register(action)
-        sleep(0.11)
+        sleep(0.113)
         @timer.pause
         assert_equal(10, output.size)
         assert_equal(1, @timer.actions.size)
@@ -67,7 +69,7 @@ class TimerTests < Test::Unit::TestCase
         output = []
         action = ActionTimer::Action.new(:period => 0.01){output << :action}
         @timer.register(action)
-        sleep(0.021)
+        sleep(0.029)
         @timer.remove(action)
         assert_equal(2, output.size)
         assert(@timer.actions.empty?)
