@@ -172,6 +172,7 @@ module ActionTimer
         
         def add_waiting_actions
             @add_lock.synchronize do
+                @new_actions.each{|a|a.timer = self}
                 @actions = @actions + @new_actions
                 @new_actions.clear
             end
