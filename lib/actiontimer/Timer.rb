@@ -8,10 +8,12 @@ module ActionTimer
         # Argument hash: {:pool, :logger, :auto_start}
         def initialize(args={}, extra=nil)
             auto_start = true
+            @delta = nil
             if(args.is_a?(Hash))
                 @pool = args[:pool] ? args[:pool] : ActionPool::Pool.new
                 @logger = args[:logger] && args[:logger].is_a?(Logger) ? args[:logger] : Logger.new(nil)
                 auto_start = args.has_key?(:auto_start) ? args[:auto_start] : true
+                @delta = args[:delta] ? args[:delta].to_f : nil
             else
                 @pool = args.is_a?(ActionPool::Pool) ? args : ActionPool::Pool.new
                 @logger = extra && extra.is_a?(Logger) ? extra : Logger.new(nil)
@@ -20,17 +22,21 @@ module ActionTimer
             @new_actions = []
             @timer_thread = nil
             @stop_timer = false
-            @add_lock = Mutex.new
-            @awake_lock = Mutex.new
+            @add_lock = Splib::Monitor.new
+            @awake_lock = Splib::Monitor.new
+            @sleeper = Splib::Monitor.new
+            @respond_to = Thread.current
             start if auto_start
         end
         
         # Forcibly wakes the timer early
         def wakeup
             raise NotRunning.new unless running?
-            return unless @awake_lock.try_lock
-            @timer_thread.wakeup if @timer_thread.status == 'sleep'
-            @awake_lock.unlock
+            if(@sleeper.waiters > 0)
+                @sleeper.signal
+            else
+                @timer_thread.wakeup if @timer_thread.alive? && @timer_thread.stop?
+            end
         end
         
         # period:: amount of time between runs
@@ -48,7 +54,7 @@ module ActionTimer
             action = Action.new(args.merge(:timer => self), &func)
             @add_lock.synchronize{ @new_actions << action }
             wakeup if running?
-            return action
+            action
         end
         
         # actions:: Array of actions or single ActionTimer::Action
@@ -85,8 +91,11 @@ module ActionTimer
                         if((to_sleep.nil? || to_sleep > 0) && @new_actions.empty?)
                             @awake_lock.unlock if @awake_lock.locked?
                             start = Time.now.to_f
-                            to_sleep.nil? ? sleep : sleep(to_sleep)
+                            to_sleep.nil? ? @sleeper.wait : sleep(to_sleep)
                             actual_sleep = Time.now.to_f - start
+                            if(@delta && to_sleep && actual_sleep.within_delta?(:expected => to_sleep, :delta => @delta))
+                                actual_sleep = to_sleep
+                            end
                             @awake_lock.lock
                         else
                             actual_sleep = 0
@@ -97,7 +106,8 @@ module ActionTimer
                 rescue Object => boom
                     @timer_thread = nil
                     clean_actions
-                    @logger.fatal("Timer encountered an unexpected error: #{boom}\n#{boom.backtrace.join("\n")}")
+                    @logger.fatal("Timer encountered an unexpected error and is shutting down: #{boom}\n#{boom.backtrace.join("\n")}")
+                    @respond_to.raise boom
                 end
             end
         end
@@ -139,7 +149,7 @@ module ActionTimer
         
         # Is timer currently running?
         def running?
-            return !@timer_thread.nil?
+            !@timer_thread.nil?
         end
 
         # action:: ActionTimer::Action
@@ -156,12 +166,8 @@ module ActionTimer
         private
         
         def get_min_sleep
-            min = @actions.map{|a|a.remaining}.sort[0]
-            unless(min.nil? || min > 0)
-                @actions.each{|a|@actions.delete(a) if a.remaining == 0} # kill stuck actions
-                min = get_min_sleep
-            end
-            return min
+            min = @actions.min{|a,b|a.remaining <=> b.remaining}
+            min.remaining if min
         end
         
         def add_waiting_actions
