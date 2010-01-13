@@ -13,7 +13,9 @@ module ActionTimer
             raise ArgumentError.new('Period must be supplied') unless hash[:period]
             raise ArgumentError.new('Block must be provided') unless block_given?
             raise ArgumentError.new('Block must accept data value') if hash[:data] && block.arity == 0
-            raise ArgumentError.new('Data must be supplied for block') if !hash[:data] && !(block.arity == 0)
+            if((block.arity > 0 || block.arity < -1) && (!hash.has_key?(:data) || hash[:data].nil?))
+                raise ArgumentError.new('Data must be supplied for block')
+            end
             args = {:once => false, :data => nil, :owner => nil}.merge(hash)
             @period = args[:period].to_f
             @block = block
@@ -44,7 +46,7 @@ module ActionTimer
         # Decrement remaining wait time by given amount
         def tick(amount)
             amount = amount.to_f
-            amount = 0.0 if amount < 0.0
+            amount = 0 if amount < 0
             @wait_remaining = @wait_remaining - amount if @wait_remaining > 0
             @wait_remaining = 0 if @wait_remaining < 0
             @completed = true if @once && @wait_remaining <= 0
