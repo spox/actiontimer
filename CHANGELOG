@@ -1,5 +1,11 @@
 = CHANGELOG
 
+== 0.2.1
+* Use simple monitor
+* Add support for rounding sleep time within a delta
+* Raise unexpected exception to creator thread after shutting down
+* Fix arity checks for < 1.9 versions
+
 == 0.2.0
 * hashed arguments for Timer#add and Action#new
 * Timer#mass_add replaced with Timer#register for single and arrays of Actions
