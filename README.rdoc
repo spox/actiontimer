@@ -16,6 +16,15 @@ ActionTimer is a helper for timed events. It allows for single and recurring act
 
 {rip}[http://hellorip.com/about.html] makes it easy to install directly from a github repository.
 
+=== Testing
+
+ActionTimer is currently tested on:
+
+* Ruby 1.8.6-p383
+* Ruby 1.8.7-p248
+* Ruby 1.9.1-p376
+* JRuby 1.4.0
+
 === Using the timer:
 
 ==== Simple example:
@@ -95,7 +104,7 @@ What if you want to add multiple actions at one time? We can do this:
     actions << ActionTimer::Action.new(timer, 0.1){ result += 1}
     actions << ActionTimer::Action.new(timer, 0.2){ result += 1}
     actions << ActionTimer::Action.new(timer, 0.3){ result += 1}
-    timer.mass_add(actions)
+    timer.register(actions)
     sleep(0.41)
     p result
     
