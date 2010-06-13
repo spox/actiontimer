@@ -31,8 +31,8 @@ ActionTimer is currently tested on:
 
     require 'actiontimer'
     timer = ActionTimer::Timer.new
-    timer.add(1){ puts "#{Time.now}: This is timed every 1 second." }
-    timer.add(2){ puts "#{Time.now}: This is timed every 2 seconds." }
+    timer.add(:period => 1){ puts "#{Time.now}: This is timed every 1 second." }
+    timer.add(:period => 2){ puts "#{Time.now}: This is timed every 2 seconds." }
     loop do
         puts "#{Time.now}: Main loop sleeps for 3 seconds."
         sleep(3)
@@ -57,7 +57,7 @@ What if you want to sleep for less than a second? Well, sure we can do that:
     require 'actiontimer'
     result = 0
     timer = ActionTimer::Timer.new
-    timer.add(0.1){ result += 1 }
+    timer.add(:period => 0.1){ result += 1 }
     sleep(1.01)
     p result
     
@@ -68,7 +68,7 @@ How about passing data to your block:
     require 'actiontimer'
     data = :foobar
     timer = ActionTimer::Timer.new
-    timer.add(0.01, false, data){|x| puts "Data: #{x}" }
+    timer.add(:period => 0.01, :once => false, :data => data){|x| puts "Data: #{x}" }
     data = :fubar
     p data
     sleep(0.011)
@@ -84,7 +84,7 @@ Or maybe you don't want the timer to start right away:
     require 'actiontimer'
     timer = ActionTimer::Timer.new(:auto_start => false)
     output = 0
-    timer.add(0.1){ output += 1 }
+    timer.add(:period => 0.1){ output += 1 }
     sleep(1)
     p output
     timer.start
@@ -101,9 +101,9 @@ What if you want to add multiple actions at one time? We can do this:
     timer = ActionTimer::Timer.new
     result = 0
     actions = []
-    actions << ActionTimer::Action.new(timer, 0.1){ result += 1}
-    actions << ActionTimer::Action.new(timer, 0.2){ result += 1}
-    actions << ActionTimer::Action.new(timer, 0.3){ result += 1}
+    actions << ActionTimer::Action.new(:timer => timer, :period => 0.1){ result += 1}
+    actions << ActionTimer::Action.new(:timer => timer, :period => 0.2){ result += 1}
+    actions << ActionTimer::Action.new(:timer => timer, :period => 0.3){ result += 1}
     timer.register(actions)
     sleep(0.41)
     p result
