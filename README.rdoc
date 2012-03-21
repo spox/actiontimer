@@ -5,12 +5,12 @@ ActionTimer is a helper for timed events. It allows for single and recurring act
 
 === install (easy):
 
-    gem install actiontimer
+  gem install actiontimer
 
 === install (less easy):
 
-    git clone http://github.com/spox/actiontimer.git
-    cd actiontimer && gem build *.gemspec && gem install ./
+  git clone http://github.com/spox/actiontimer.git
+  cd actiontimer && gem build *.gemspec && gem install ./
 
 === install (less easy that's a little easier)
 
@@ -29,92 +29,92 @@ ActionTimer is currently tested on:
 
 ==== Simple example:
 
-    require 'actiontimer'
-    timer = ActionTimer::Timer.new
-    timer.add(:period => 1){ puts "#{Time.now}: This is timed every 1 second." }
-    timer.add(:period => 2){ puts "#{Time.now}: This is timed every 2 seconds." }
-    loop do
-        puts "#{Time.now}: Main loop sleeps for 3 seconds."
-        sleep(3)
-    end
-    
-    =>
-    2010-01-05 17:52:46 -0800: Main loop sleeps for 3 seconds.
-    2010-01-05 17:52:47 -0800: This is timed every 1 second.
-    2010-01-05 17:52:48 -0800: This is timed every 1 second.
-    2010-01-05 17:52:48 -0800: This is timed every 2 seconds.
-    2010-01-05 17:52:49 -0800: Main loop sleeps for 3 seconds.
-    2010-01-05 17:52:49 -0800: This is timed every 1 second.
-    2010-01-05 17:52:50 -0800: This is timed every 1 second.
-    2010-01-05 17:52:50 -0800: This is timed every 2 seconds.
-    2010-01-05 17:52:51 -0800: This is timed every 1 second.
-    2010-01-05 17:52:52 -0800: Main loop sleeps for 3 seconds.
+  require 'actiontimer'
+  timer = ActionTimer::Timer.new
+  timer.add(:period => 1){ puts "#{Time.now}: This is timed every 1 second." }
+  timer.add(:period => 2){ puts "#{Time.now}: This is timed every 2 seconds." }
+  loop do
+    puts "#{Time.now}: Main loop sleeps for 3 seconds."
+    sleep(3)
+  end
+  
+  =>
+  2010-01-05 17:52:46 -0800: Main loop sleeps for 3 seconds.
+  2010-01-05 17:52:47 -0800: This is timed every 1 second.
+  2010-01-05 17:52:48 -0800: This is timed every 1 second.
+  2010-01-05 17:52:48 -0800: This is timed every 2 seconds.
+  2010-01-05 17:52:49 -0800: Main loop sleeps for 3 seconds.
+  2010-01-05 17:52:49 -0800: This is timed every 1 second.
+  2010-01-05 17:52:50 -0800: This is timed every 1 second.
+  2010-01-05 17:52:50 -0800: This is timed every 2 seconds.
+  2010-01-05 17:52:51 -0800: This is timed every 1 second.
+  2010-01-05 17:52:52 -0800: Main loop sleeps for 3 seconds.
 
 ==== Other examples:
 
 What if you want to sleep for less than a second? Well, sure we can do that:
 
-    require 'actiontimer'
-    result = 0
-    timer = ActionTimer::Timer.new
-    timer.add(:period => 0.1){ result += 1 }
-    sleep(1.01)
-    p result
-    
-    => 10
-    
+  require 'actiontimer'
+  result = 0
+  timer = ActionTimer::Timer.new
+  timer.add(:period => 0.1){ result += 1 }
+  sleep(1.01)
+  p result
+  
+  => 10
+  
 How about passing data to your block:
 
-    require 'actiontimer'
-    data = :foobar
-    timer = ActionTimer::Timer.new
-    timer.add(:period => 0.01, :once => false, :data => data){|x| puts "Data: #{x}" }
-    data = :fubar
-    p data
-    sleep(0.011)
-    p data
-    
-    =>
-        :fubar
-        Data: foobar
-        :fubar
+  require 'actiontimer'
+  data = :foobar
+  timer = ActionTimer::Timer.new
+  timer.add(:period => 0.01, :once => false, :data => data){|x| puts "Data: #{x}" }
+  data = :fubar
+  p data
+  sleep(0.011)
+  p data
+  
+  =>
+    :fubar
+    Data: foobar
+    :fubar
 
 Or maybe you don't want the timer to start right away:
 
-    require 'actiontimer'
-    timer = ActionTimer::Timer.new(:auto_start => false)
-    output = 0
-    timer.add(:period => 0.1){ output += 1 }
-    sleep(1)
-    p output
-    timer.start
-    sleep(1.01)
-    p output
+  require 'actiontimer'
+  timer = ActionTimer::Timer.new(:auto_start => false)
+  output = 0
+  timer.add(:period => 0.1){ output += 1 }
+  sleep(1)
+  p output
+  timer.start
+  sleep(1.01)
+  p output
+  
+  => 
+    0
+    10
     
-    => 
-        0
-        10
-        
 What if you want to add multiple actions at one time? We can do this:
-    
-    require 'actiontimer'
-    timer = ActionTimer::Timer.new
-    result = 0
-    actions = []
-    actions << ActionTimer::Action.new(:timer => timer, :period => 0.1){ result += 1}
-    actions << ActionTimer::Action.new(:timer => timer, :period => 0.2){ result += 1}
-    actions << ActionTimer::Action.new(:timer => timer, :period => 0.3){ result += 1}
-    timer.register(actions)
-    sleep(0.41)
-    p result
-    
-    => 7
-    
+  
+  require 'actiontimer'
+  timer = ActionTimer::Timer.new
+  result = 0
+  actions = []
+  actions << ActionTimer::Action.new(:timer => timer, :period => 0.1){ result += 1}
+  actions << ActionTimer::Action.new(:timer => timer, :period => 0.2){ result += 1}
+  actions << ActionTimer::Action.new(:timer => timer, :period => 0.3){ result += 1}
+  timer.register(actions)
+  sleep(0.41)
+  p result
+  
+  => 7
+  
 == Last remarks
 
 If you find any bugs, please report them through {github}[http://github.com/spox/actiontimer/issues]. If you are in need of any help, you can generally find me on DALnet and Freenode.
 
 == License
 
-    ActionPool is licensed under the LGPLv3
-    Copyright (c) 2009 spox <spox@modspox.com>
+  ActionPool is licensed under the LGPLv3
+  Copyright (c) 2009 spox <spox@modspox.com>
