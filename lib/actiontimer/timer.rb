@@ -1,5 +1,5 @@
 require 'actionpool'
-['Action', 'Exceptions'].each{|f| require "actiontimer/#{f}"}
+%w(action exceptions).each{|f| require "actiontimer/#{f}"}
 
 module ActionTimer
   class Timer

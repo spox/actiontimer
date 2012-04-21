@@ -1,4 +1,4 @@
 require 'rubygems'
-require 'actiontimer/Timer.rb'
+require 'actiontimer/timer.rb'
 require 'splib'
-Splib.load :Array, :Float, :Monitor
+Splib.load :array, :float, :monitor
