@@ -79,7 +79,7 @@ class TimerTests < Test::Unit::TestCase
     sleep(0.021)
     @timer.remove(action)
     assert(!@timer.registered?(action))
-    assert(2, output.size)
+    assert_equal(2, output.size)
   end
 
 end
