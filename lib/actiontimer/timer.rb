@@ -1,42 +1,26 @@
+require 'timers'
 require 'actionpool'
-%w(action exceptions).each{|f| require "actiontimer/#{f}"}
+require 'actiontimer/action'
 
 module ActionTimer
   class Timer
-    # pool:: ActionPool for processing actions
+    class Wakeup < StandardError
+    end
+
     # Creates a new timer
-    # Argument hash: {:pool, :logger, :auto_start}
+    # Argument hash: {:logger, :pool}
     def initialize(args={}, extra=nil)
-      auto_start = true
-      @delta = nil
+      @pool = args[:pool] || ActionPool::Pool.new
       if(args.is_a?(Hash))
-        @pool = args[:pool] ? args[:pool] : ActionPool::Pool.new
         @logger = args[:logger] && args[:logger].is_a?(Logger) ? args[:logger] : Logger.new(nil)
-        auto_start = args.has_key?(:auto_start) ? args[:auto_start] : true
-        @delta = args[:delta] ? args[:delta].to_f : nil
       else
-        @pool = args.is_a?(ActionPool::Pool) ? args : ActionPool::Pool.new
         @logger = extra && extra.is_a?(Logger) ? extra : Logger.new(nil)
       end
-      @actions = []
-      @new_actions = []
-      @timer_thread = nil
-      @stop_timer = false
-      @add_lock = Splib::Monitor.new
-      @awake_lock = Splib::Monitor.new
-      @sleeper = Splib::Monitor.new
-      @respond_to = Thread.current
-      start if auto_start
-    end
-    
-    # Forcibly wakes the timer early
-    def wakeup
-      raise NotRunning.new unless running?
-      if(@sleeper.waiters > 0)
-        @sleeper.signal
-      else
-        @timer_thread.wakeup if @timer_thread.alive? && @timer_thread.stop?
-      end
+      @timers = Timers.new
+      @actions = {}
+      @paused = false
+      @run = true
+      @thread = timer_thread
     end
     
     # period:: amount of time between runs
@@ -52,106 +36,65 @@ module ActionTimer
       raise ArgumentError.new('Block must accept data value') if hash[:data] && func.arity == 0
       args = {:once => false, :data => nil, :owner => nil}.merge(hash)
       action = Action.new(args.merge(:timer => self), &func)
-      @add_lock.synchronize{ @new_actions << action }
-      wakeup if running?
-      action
+      register(action)
     end
-    
-    # actions:: Array of actions or single ActionTimer::Action
-    # Add single or multiple Actions to the timer at once
-    def register(action)
-      if(action.is_a?(Array))
-        if(action.find{|x|x.is_a?(Action)}.nil?)
-          raise ArgumentError.new('Array contains non ActionTimer::Action objects')
+
+    def register(actions)
+      res = [actions].flatten.map do |action|
+        timer = Timers::Timer.new(@timers, action.period, !action.once) do
+          @pool.queue do
+            action.run
+          end
         end
-      else
-        raise ArgumentError.new('Expecting an ActionTimer::Action object') unless action.is_a?(Action)
-        action = [action]
+        @actions[action] = timer
+        action
       end
-      @add_lock.synchronize{ @new_actions = @new_actions + action }
-      wakeup if running?
+      wakeup!
+      res.size > 1 ? res : res.first
     end
     
     # action:: Action to remove from timer
     # Remove given action from timer
-    def remove(action)
+    def remove(action, wakeup=true)
       raise ArgumentError.new('Expecting an action') unless action.is_a?(Action)
-      @actions.delete(action)
-      wakeup if running?
+      @actions.delete(action).cancel
+      wakeup!
     end
     
-    # Start the timer
-    def start
-      raise AlreadyRunning.new unless @timer_thread.nil?
-      @stop_timer = false
-      @timer_thread = Thread.new do
-        begin
-          until @stop_timer do
-            to_sleep = get_min_sleep
-            if((to_sleep.nil? || to_sleep > 0) && @new_actions.empty?)
-              @awake_lock.unlock if @awake_lock.locked?
-              start = Time.now.to_f
-              to_sleep.nil? ? @sleeper.wait : sleep(to_sleep)
-              actual_sleep = Time.now.to_f - start
-              if(@delta && to_sleep && actual_sleep.within_delta?(:expected => to_sleep, :delta => @delta))
-                actual_sleep = to_sleep
-              end
-              @awake_lock.lock
-            else
-              actual_sleep = 0
-            end
-            tick(actual_sleep)
-            add_waiting_actions
-          end
-        rescue Object => boom
-          @timer_thread = nil
-          clean_actions
-          @logger.fatal("Timer encountered an unexpected error and is shutting down: #{boom}\n#{boom.backtrace.join("\n")}")
-          @respond_to.raise boom
-        end
+    # Stop the timer. 
+    def stop
+      actions.keys.each do |action|
+        remove(action, false)
       end
-    end
-    
-    # Pause the timer in its current state.
+      wakeup!
+    end 
+
     def pause
-      @stop_timer = true
-      if(running?)
-        wakeup
-        @timer_thread.join
-      end
-      @timer_thread = nil
+      @paused = true
+      wakeup!
     end
 
-    # Stop the timer. Unlike pause, this will completely
-    # stop the timer and remove all actions from the timer
-    def stop
-      @stop_timer = true
-      if(running?)
-        wakeup
-        clean_actions
-        @timer_thread.join
-      end
-      @timer_thread = nil
+    def unpause
+      @paused = false
+      wakeup!
     end
-    
+
     # owner:: owner actions to remove
     # Clears timer of actions. If an owner is supplied
     # only actions owned by owner will be removed
     def clear(owner=nil)
       if(owner.nil?)
-        @actions.clear
-        @new_actions.clear
+        stop
       else
-        @actions.each{|a| @actions.delete(a) if a.owner == owner}
+        @actions.each do |action|
+          if(action.owner == owner)
+            @actions.delete(action).cancel
+          end
+        end
       end
-      wakeup if running?
+      wakeup!
     end
     
-    # Is timer currently running?
-    def running?
-      !@timer_thread.nil?
-    end
-
     # action:: ActionTimer::Action
     # Is action currently in timer
     def registered?(action)
@@ -162,42 +105,36 @@ module ActionTimer
     def actions
       @actions.dup
     end
-    
-    private
-    
-    def get_min_sleep
-      min = @actions.min{|a,b|a.remaining <=> b.remaining}
-      min.remaining if min
-    end
-    
-    def add_waiting_actions
-      @add_lock.synchronize do
-        @new_actions.each{|a|a.timer = self}
-        @actions = @actions + @new_actions
-        @new_actions.clear
+
+    def restart
+      unless(@thread.status)
+        @thread = timer_thread
       end
     end
-    
-    def tick(time_passed)
-      @actions.each do |action|
-        action.tick(time_passed)
-        if(action.due?)
-          @actions.delete(action) if action.is_complete?
-          action = action.schedule
-          @pool.process do
-            begin
-              action.run
-            rescue StandardError => boom
-              @logger.error("Timer caught an error while running action: #{boom}\n#{boom.backtrace.join("\n")}")
+
+    private
+
+    def timer_thread
+      Thread.new do
+        while(@run)
+          begin
+            if(@timers.empty? || @paused)
+              sleep
+            else
+              @timers.wait
             end
+          rescue Wakeup
+            # okay
+          rescue Exception => e
+            puts "Ack: #{e}"
           end
         end
       end
     end
-    
-    def clean_actions
-      @actions.clear
-      @new_actions.clear
+
+    def wakeup!
+      Thread.pass
+      @thread.raise Wakeup.new
     end
     
   end

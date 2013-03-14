@@ -11,8 +11,7 @@ spec = Gem::Specification.new do |s|
   s.files       = Dir['**/*']
   s.require_paths   = %w(lib)
   s.add_dependency 'actionpool', '~> 0.2.3'
-  s.add_dependency 'splib', '~> 1.4'
-  s.required_ruby_version = '>= 1.8.6'
+  s.required_ruby_version = '>= 1.9.0'
   s.homepage      = 'http://github.com/spox/actiontimer'
   s.description     = 'ActionTimer is a simple timer for recurring actions. It supports single and recurring actions with an easy to use API.'
 end

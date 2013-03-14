@@ -47,49 +47,6 @@ class ActionTests < Test::Unit::TestCase
     assert_equal(object, action.owner)
   end
 
-  def test_tick
-    action = ActionTimer::Action.new(:timer => @timer, :period => 2){true}
-    action.tick(1)
-    assert_equal(1, action.remaining)
-    action.tick(0.1)
-    assert_equal(0.9, action.remaining)
-    action.tick(0.11)
-    assert_equal(0.79, action.remaining)
-  end
-
-  def test_reset_period
-    action = ActionTimer::Action.new(:timer => @timer, :period => 2){true}
-    action.tick(1)
-    assert_equal(1, action.remaining)
-    action.reset_period(3)
-    assert_equal(3, action.remaining)
-    action.tick(3)
-    assert_equal(0, action.remaining)
-    assert(!action.is_complete?)
-  end
-
-  def test_complete
-    action = ActionTimer::Action.new(:timer => @timer, :period => 2, :once => true){true}
-    action.tick(2)
-    assert_equal(0, action.remaining)
-    assert(action.is_complete?)
-  end
-
-  def test_schedule
-    action = ActionTimer::Action.new(:timer => @timer, :period => 2){true}
-    action.tick(1)
-    assert_equal(1, action.remaining)
-    assert_equal(action, action.schedule)
-    assert_equal(2, action.remaining)
-  end
-
-  def test_due
-    action = ActionTimer::Action.new(:timer => @timer, :period => 2){true}
-    assert(!action.due?)
-    action.tick(2)
-    assert(action.due?)
-  end
-
   def test_run_noargs
     a = false
     action = ActionTimer::Action.new(:timer => @timer, :period => 2){ a = true }

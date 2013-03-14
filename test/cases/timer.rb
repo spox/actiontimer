@@ -36,27 +36,27 @@ class TimerTests < Test::Unit::TestCase
     @timer.add(:period => 0.1, :once => true, :data => :foo){|x| output << x }
     sleep(0.01)
     assert_equal(2, @timer.actions.size)
-    sleep(0.14)
+    sleep(0.5)
     assert_equal(:foo, output.pop)
     assert_equal(1, @timer.actions.size)
   end
 
   def test_register
     output = []
-    action = ActionTimer::Action.new(:period => 0.01){output << :action}
+    action = ActionTimer::Action.new(:timer => @timer, :period => 0.01){output << :action}
     @timer.register(action)
-    sleep(0.113)
+    sleep(0.11)
     @timer.pause
     assert_equal(10, output.size)
     assert_equal(1, @timer.actions.size)
     assert(@timer.registered?(action))
     @timer.clear
     assert(@timer.actions.empty?)
-    @timer.start
     output.clear
     actions = [action]
-    actions << ActionTimer::Action.new(:period => 0.02){output << :fubar}
+    actions << ActionTimer::Action.new(:timer => @timer, :period => 0.02){output << :fubar}
     @timer.register(actions)
+    @timer.unpause
     sleep(0.051)
     @timer.pause
     assert_equal(7, output.size)
@@ -67,7 +67,7 @@ class TimerTests < Test::Unit::TestCase
 
   def test_remove
     output = []
-    action = ActionTimer::Action.new(:period => 0.01){output << :action}
+    action = ActionTimer::Action.new(:timer => @timer, :period => 0.01){output << :action}
     @timer.register(action)
     sleep(0.029)
     @timer.remove(action)
@@ -76,7 +76,7 @@ class TimerTests < Test::Unit::TestCase
     output.clear
     assert(output.empty?)
     action = @timer.add(:period => 0.01){output << :action}
-    sleep(0.021)
+    sleep(0.025)
     @timer.remove(action)
     assert(!@timer.registered?(action))
     assert_equal(2, output.size)
